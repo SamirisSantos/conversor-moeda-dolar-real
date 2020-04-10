@@ -2,6 +2,9 @@ import React, { Component } from 'react';
 import './Conversor.css';
 import { InputGroup, InputGroupAddon, InputGroupText, Input } from 'reactstrap';
 import { FormGroup, Label, Col, Button } from 'reactstrap';
+import { CardBody, Card, Container } from 'reactstrap';
+
+// estilo https://reactstrap.github.io/
 
 export default class Conversor extends Component{
     
@@ -10,14 +13,14 @@ export default class Conversor extends Component{
 
         this.state = {
            
-            moedaDolar_valor: "",
-            moedaReal_valor: "",
-            moedaDolar_imposto: "",
+            moedaDolar_valor: "-",
+            moedaReal_valor: "-",
+            moedaDolar_imposto: "-",
+            moedaReal_imposto: "-",
             taxa: "",
-            iof_cartao: 0.0064 , // IOF cartão 6.4%
-            iof_dinheiro: 0.011 , // IOF cartão 1,1%
-            buy_cartao: "",
-            buy_dinheiro: "",
+            iof: "-",
+            //iof_cartao: 0.0064 , // IOF cartão 6.4%
+            //iof_dinheiro: 0.011 , // IOF cartão 1,1%
             cotacao: "",
 
         
@@ -57,13 +60,19 @@ export default class Conversor extends Component{
             // Comprando com cartão: [(dólar) + (taxa) + (IOF cartao)] x (dólar)
             
             let cotacao = (parseFloat(data.USD.high)).toFixed(2);
-            let moedaReal_valor = (parseFloat(this.state.moedaDolar_valor * cotacao)).toFixed(2);
-            let moedaDolar_imposto = (parseFloat((parseFloat(this.state.moedaDolar_valor)) + (this.state.moedaDolar_valor * (this.state.taxa/100)))).toFixed(2);
+            //let moedaReal_valor = (parseFloat(parseFloat(this.state.moedaDolar_valor * cotacao))).toFixed(2);
 
-            //let moedaDolar_imposto = (parseFloat(this.state.moedaDolar_valor * this.state.taxa)).toFixed(2);
+            let moedaReal_valor =  (parseFloat((parseFloat((this.state.moedaDolar_valor * cotacao) * (parseFloat( this.state.iof / 100)))) + (parseFloat(this.state.moedaDolar_valor * cotacao)))).toFixed(2);
             
-            this.setState({moedaDolar_imposto})
+
+            let moedaDolar_imposto = (parseFloat((parseFloat(this.state.moedaDolar_valor)) + (this.state.moedaDolar_valor * (this.state.taxa/100)))).toFixed(2);
+            let moedaReal_imposto =  (parseFloat((parseFloat((moedaDolar_imposto * cotacao) * (parseFloat( this.state.iof / 100)))) + (parseFloat(moedaDolar_imposto * cotacao)))).toFixed(2);
+            
+            
+            
+            this.setState({moedaDolar_imposto});
             this.setState({moedaReal_valor});
+            this.setState({moedaReal_imposto});
             this.setState({cotacao});
             
         })
@@ -73,45 +82,53 @@ export default class Conversor extends Component{
 
         return(
             <div className="conversor">
-                <h2>{this.props.moedaDolar} para {this.props.moedaReal}</h2>
+                <Container className="themed-container">
+                <br/>
+                <h2>Conversão {this.props.moedaDolar} - {this.props.moedaReal}</h2>
+                <br/>
                 <Col sm={10}>
                 <InputGroup>
                     <InputGroupAddon addonType="prepend">
                         <InputGroupText>$</InputGroupText>
                     </InputGroupAddon>
-                    <Input placeholder="Valor em Dolár" onChange={(event)=>{this.setState({moedaDolar_valor:event.target.value})}}  />
+                    <Input placeholder="Valor em Dolár" onChange={(event)=>{this.setState({moedaDolar_valor:event.target.value})}} block />
                 </InputGroup>
                 <br/>
                 <InputGroup>
                     <InputGroupAddon addonType="prepend">
                         <InputGroupText>%</InputGroupText>
                     </InputGroupAddon>
-                    <Input placeholder="Taxa do estado USA" onChange={(event)=>{this.setState({taxa:event.target.value})}} />
+                    <Input placeholder="Taxa do estado USA" onChange={(event)=>{this.setState({taxa:event.target.value})}} block />
                 </InputGroup>
                 <br/>
                 </Col>
                 <h4>Forma de Pagamento</h4> 
                 <Col sm={10}>
                 <FormGroup check>
-                    <Label check><Input type="radio" name="dinheiro"/> Dinheiro - IOF 1,1% </Label>                 
+                    <Label check><Input type="radio" value="1.1" name="iof" checked={this.state.iof === "1.1"} onChange={(event)=>{this.setState({iof:event.target.value})}}/> Dinheiro</Label>                 
                 </FormGroup>
                 <FormGroup check>
-                
-                    <Label check><Input type="radio" name="cartao"/> Cartão - IOF 6,1% </Label>                 
+                    <Label check><Input type="radio" value="6.4" name="iof" checked={this.state.iof === "6.4"} onChange={(event)=>{this.setState({iof:event.target.value})}}/> Cartão</Label>                 
                 </FormGroup>
                 </Col>
                 <br/>
-                <Button color="primary" value="Converte" onClick={this.convert}>Converter</Button>
-                <br/>
-                
-                <p>Cotação Dolar: {this.state.cotacao}</p>
-                <p>IOF:</p>
-                <p>Total em dólar sem imposto: {this.state.moedaDolar_valor} </p>
-                <p>Total em dólar com imposto: {this.state.moedaDolar_imposto}</p>
-                <p>Total em real sem imposto: {this.state.moedaReal_valor}</p>
-                <p>Total em real com imposto:</p>
-                
+                <Button color="primary"  value="Converte" style={{ marginBottom: '1rem' }} onClick={this.convert} block>Converter</Button>
                
+                    <Card>
+                        <CardBody>
+                            <p>Cotação Dolar: {this.state.cotacao}</p>
+                            <p>IOF: {this.state.iof}%</p>
+                            <p>Total em dólar sem imposto: {this.state.moedaDolar_valor} </p>
+                            <p>Total em dólar com imposto: {this.state.moedaDolar_imposto}</p>
+                            <p>Total em real sem imposto: {this.state.moedaReal_valor}</p>
+                            <p>Total em real com imposto: {this.state.moedaReal_imposto}</p>
+                        </CardBody>
+                    </Card>
+              
+                
+                <br/>
+    
+                </Container>
             </div>
         )
   
